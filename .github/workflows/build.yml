@@ -80,9 +80,11 @@ jobs:
           make integration_test
 
       - name: Coveralls
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.10' && github.repository == 'feeluown/FeelUOwn'
+        # FORK-ONLY: repository guard dropped and upload replaced by a dry run
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.10'
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip install coveralls
-          coveralls --service=github
+          coveralls --service=github --output=coveralls.json
+          python -c "import json; d=json.load(open('coveralls.json')); sf=d['source_files']; rel=sum(1 for f in sf for c in f['coverage'] if c is not None); cov=sum(1 for f in sf for c in f['coverage'] if c); print('source_files', len(sf), 'relevant', rel, 'covered', cov, 'percent %.2f' % (100*cov/rel))"
