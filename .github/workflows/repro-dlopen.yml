@@ -1,0 +1,26 @@
+name: repro-dlopen
+on:
+  push:
+    branches: [repro-dlopen]
+permissions:
+  contents: read
+jobs:
+  dlopen:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download the FeelUOwn v5.1.3 macOS package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v5.1.3 -R feeluown/FeelUOwn -p 'FeelUOwnX-macOS26.7.2-arm64.zip'
+          unzip -q FeelUOwnX-macOS26.7.2-arm64.zip
+      - name: Load the bundled libmpv
+        run: |
+          sw_vers -productVersion
+          lib=FeelUOwnX.app/Contents/Frameworks/libmpv.dylib
+          vtool -show-build "$lib" | grep -E 'platform|minos'
+          python3 -c "import ctypes, sys; ctypes.CDLL(sys.argv[1]); print('libmpv loaded')" "$lib"
