@@ -4,8 +4,9 @@ on:
     branches: [repro-dlopen]
 permissions:
   contents: read
+  actions: read
 jobs:
-  dlopen:
+  release-zip:
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +21,22 @@ jobs:
           unzip -q FeelUOwnX-macOS26.7.2-arm64.zip
       - name: Load the bundled libmpv
         run: |
+          sw_vers -productVersion
+          lib=FeelUOwnX.app/Contents/Frameworks/libmpv.dylib
+          vtool -show-build "$lib" | grep -E 'platform|minos'
+          python3 -c "import ctypes, sys; ctypes.CDLL(sys.argv[1]); print('libmpv loaded')" "$lib"
+  fixed-zip:
+    runs-on: macos-15
+    steps:
+      - name: Download the macos-15 package built by run 43313089698
+        uses: actions/download-artifact@v4
+        with:
+          name: FeelUOwnX-macOS15.8.2-.zip
+          run-id: 43313089698
+          github-token: ${{ github.token }}
+      - name: Load the bundled libmpv
+        run: |
+          unzip -q FeelUOwnX-macOS15.8.2-arm64.zip
           sw_vers -productVersion
           lib=FeelUOwnX.app/Contents/Frameworks/libmpv.dylib
           vtool -show-build "$lib" | grep -E 'platform|minos'
